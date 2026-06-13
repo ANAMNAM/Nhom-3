@@ -1,0 +1,289 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DoAn</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/DoAn.styles.css" asp-append-version="true" />
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Products" asp-action="Index">DoAn</a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Sản phẩm</a>
+                        </li>
+
+                        <li class="nav-item">
+                            @{
+                                var cartJson = Context.Session.GetString("cart");
+                                var cartCount = 0;
+
+                                if (!string.IsNullOrEmpty(cartJson))
+                                {
+                                    var cartItems = System.Text.Json.JsonSerializer
+                                        .Deserialize<List<DoAn.Models.CartItem>>(cartJson);
+
+                                    cartCount = cartItems?.Sum(x => x.Quantity) ?? 0;
+                                }
+                            }
+
+                            <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">
+                                🛒 Giỏ hàng (@cartCount)
+                            </a>
+                        </li>
+
+                        @if (Context.Session.GetString("UserName") == null)
+                        {
+                            <li class="nav-item">
+                                <a href="#"
+                                   class="nav-link text-dark"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#loginModal">
+                                    Đăng nhập
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-success" asp-controller="Account" asp-action="Profile">
+                                    Xin chào, @Context.Session.GetString("FullName")
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                                    Đăng xuất
+                                </a>
+                            </li>
+                            
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000;">
+            <div id="cartToast" class="toast align-items-center text-bg-success border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        🛒 @TempData["SuccessMessage"]
+                        <a asp-controller="Cart" asp-action="Index" class="text-white fw-bold ms-2">Xem giỏ</a>
+                    </div>
+
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+    <!-- Modal tạo tài khoản -->
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Tạo tài khoản</h5>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal">
+                    </button>
+                </div>
+
+                <form asp-controller="Account" asp-action="Register" method="post">
+                    <div class="modal-body">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Họ tên khách hàng</label>
+                                <input name="fullName" class="form-control" required />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input name="phone" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input name="email" type="email" class="form-control" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            <input name="address" class="form-control" required />
+                        </div>
+
+                        <hr />
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tên đăng nhập</label>
+                                <input name="username" class="form-control" required />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Mật khẩu</label>
+                                <input name="password" type="password" class="form-control" required />
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            Hủy
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-success">
+                            Tạo tài khoản
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    <!-- Modal đăng nhập -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Đăng nhập</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form asp-controller="Account" asp-action="Login" method="post">
+                    @if (TempData["RegisterMessage"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            @TempData["RegisterMessage"]
+                        </div>
+                    }
+                    <div class="modal-body">
+                        @if (TempData["LoginMessage"] != null)
+                        {
+                            <div class="alert alert-warning">
+                                @TempData["LoginMessage"]
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label">Tài khoản</label>
+                            <input name="username" class="form-control" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mật khẩu</label>
+                            <input name="password" type="password" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-outline-primary"
+                                data-bs-dismiss="modal"
+                                data-bs-toggle="modal"
+                                data-bs-target="#registerModal">
+                            Tạo tài khoản
+                        </button>
+
+                        <button type="submit" class="btn btn-success">
+                            Đăng nhập
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal đăng xuất -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác nhận đăng xuất</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    Bạn có chắc muốn đăng xuất khỏi hệ thống?
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+
+                    <a asp-controller="Account" asp-action="Logout" class="btn btn-danger">
+                        Đăng xuất
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script>
+            window.addEventListener("load", function () {
+            var toastElement = document.getElementById("cartToast");
+            var toast = new bootstrap.Toast(toastElement, { delay: 2500 });
+            toast.show();
+            });
+        </script>
+    }
+
+    @if (TempData["ShowLoginModal"] != null || TempData["LoginMessage"] != null)
+    {
+        <script>
+            window.addEventListener("load", function () {
+            var loginModal = new bootstrap.Modal(document.getElementById("loginModal"));
+            loginModal.show();
+            });
+        </script>
+    }
+
+    @await RenderSectionAsync("Scripts", required: false)
+    @if (TempData["ShowRegisterModal"] != null)
+    {
+        <script>
+            window.addEventListener("load", function () {
+            var registerModal = new bootstrap.Modal(document.getElementById("registerModal"));
+            registerModal.show();
+            });
+        </script>
+    }
+</body>
+</html>

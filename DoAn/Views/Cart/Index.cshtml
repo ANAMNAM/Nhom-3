@@ -1,0 +1,148 @@
+﻿@model List<DoAn.Models.CartItem>
+
+@{
+    var recommendations = ViewBag.Recommendations as List<DoAn.Models.Product>;
+    decimal total = Model.Sum(x => x.Price * x.Quantity);
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-primary">🛒 Giỏ hàng</h2>
+
+    @if (Model.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-0">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:120px;">Ảnh</th>
+                            <th>Sản phẩm</th>
+                            <th style="width:150px;">Giá</th>
+                            <th style="width:120px;">Số lượng</th>
+                            <th style="width:170px;">Thành tiền</th>
+                            <th style="width:100px;"></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <img src="/images/products/@(string.IsNullOrWhiteSpace(item.ImageUrl) ? "no-image.jpg" : item.ImageUrl)"
+                                         class="rounded border"
+                                         style="width:90px;height:90px;object-fit:cover;" />
+                                </td>
+
+                                <td>
+                                    <strong>@item.ProductName</strong>
+                                </td>
+
+                                <td class="text-danger fw-bold">
+                                    @String.Format("{0:N0} đ", item.Price)
+                                </td>
+
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a asp-controller="Cart"
+                                           asp-action="Decrease"
+                                           asp-route-id="@item.ProductId"
+                                           class="btn btn-outline-secondary btn-sm">
+                                            -
+                                        </a>
+
+                                        <span class="badge bg-secondary fs-6">
+                                            @item.Quantity
+                                        </span>
+
+                                        <a asp-controller="Cart"
+                                           asp-action="Increase"
+                                           asp-route-id="@item.ProductId"
+                                           class="btn btn-outline-secondary btn-sm">
+                                            +
+                                        </a>
+                                    </div>
+                                </td>
+
+                                <td class="fw-bold">
+                                    @String.Format("{0:N0} đ", item.Price * item.Quantity)
+                                </td>
+
+                                <td>
+                                    <a asp-controller="Cart"
+                                       asp-action="Remove"
+                                       asp-route-id="@item.ProductId"
+                                       class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng không?');">
+                                        Xóa
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="text-end mb-4">
+            <h4 class="text-danger">
+                Tổng tiền: @String.Format("{0:N0} đ", total)
+            </h4>
+            <div class="text-end mt-3">
+                <a asp-controller="Checkout"
+                   asp-action="Index"
+                   class="btn btn-primary btn-lg">
+                    Thanh toán
+                </a>
+            </div>
+        </div>
+
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Giỏ hàng đang trống.
+        </div>
+    }
+
+    <hr />
+
+    <h3 class="mb-3">Gợi ý mua kèm</h3>
+
+    @if (recommendations != null && recommendations.Any())
+    {
+        <div class="row">
+            @foreach (var item in recommendations)
+            {
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="/images/products/@(string.IsNullOrWhiteSpace(item.ImageUrl) ? "no-image.jpg" : item.ImageUrl)"
+                             class="card-img-top"
+                             style="height:180px; object-fit:cover;" />
+
+                        <div class="card-body">
+                            <h5>@item.Name</h5>
+
+                            <p class="text-danger fw-bold">
+                                @String.Format("{0:N0} đ", item.BasePrice)
+                            </p>
+
+                            <a asp-controller="Cart"
+                               asp-action="Add"
+                               asp-route-id="@item.Id"
+                               class="btn btn-success w-100">
+                                🛒 Thêm mua kèm
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <a asp-controller="Products"
+       asp-action="Index"
+       class="btn btn-secondary mt-3">
+        ← Tiếp tục mua hàng
+    </a>
+</div>

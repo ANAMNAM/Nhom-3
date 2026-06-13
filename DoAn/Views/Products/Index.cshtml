@@ -1,0 +1,221 @@
+﻿@model IEnumerable<DoAn.Models.Product>
+
+@{
+    var categories = ViewBag.Categories as List<DoAn.Models.Category>;
+}
+
+<div class="container mt-4">
+
+    <form asp-controller="Products" asp-action="Index" method="get" class="mb-4 position-relative">
+        <div class="row g-2">
+
+            <div class="col-md-4 position-relative">
+                <input type="text"
+                       id="searchBox"
+                       name="searchString"
+                       value="@ViewBag.SearchString"
+                       class="form-control"
+                       placeholder="Nhập tên sản phẩm cần tìm..."
+                       autocomplete="off" />
+
+                <div id="suggestionBox"
+                     class="list-group position-absolute w-100 shadow"
+                     style="z-index:1000; display:none;">
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <select name="categoryId" class="form-select">
+                    <option value="">Tất cả danh mục</option>
+
+                    @if (categories != null)
+                    {
+                        foreach (var c in categories)
+                        {
+                            <option value="@c.Id"
+                                    selected="@(ViewBag.CategoryId != null && ViewBag.CategoryId == c.Id)">
+                                @c.NameVi
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <select name="sortOrder" class="form-select">
+                    <option value="">Sắp xếp mặc định</option>
+                    <option value="price_asc" selected="@(ViewBag.SortOrder == "price_asc")">Giá tăng dần</option>
+                    <option value="price_desc" selected="@(ViewBag.SortOrder == "price_desc")">Giá giảm dần</option>
+                    <option value="name_asc" selected="@(ViewBag.SortOrder == "name_asc")">Tên A-Z</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <div class="d-flex gap-2">
+
+                    <button type="submit"
+                            class="btn btn-primary flex-fill">
+                        <i class="bi bi-funnel"></i> Lọc
+                    </button>
+
+                    <a asp-controller="Products"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary flex-fill">
+                        <i class="bi bi-arrow-clockwise"></i> Làm mới
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+    <h2 class="mb-4 text-primary">Danh sách sản phẩm</h2>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 shadow-sm">
+
+                    <img src="/images/products/@(string.IsNullOrWhiteSpace(item.ImageUrl) ? "no-image.jpg" : item.ImageUrl)"
+                         class="card-img-top"
+                         style="height:200px; object-fit:cover;" />
+
+                    <div class="card-body">
+                        <h5>@item.Name</h5>
+
+                        <p class="text-danger fw-bold">
+                            @String.Format("{0:N0} đ", item.BasePrice)
+                        </p>
+
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Products"
+                               asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="btn btn-primary">
+                                Xem chi tiết
+                            </a>
+
+                            <a asp-controller="Cart"
+                               asp-action="Add"
+                               asp-route-id="@item.Id"
+                               class="btn btn-success">
+                                🛒 Thêm vào giỏ
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link"
+                           asp-controller="Products"
+                           asp-action="Index"
+                           asp-route-page="@(ViewBag.CurrentPage - 1)"
+                           asp-route-searchString="@ViewBag.SearchString"
+                           asp-route-categoryId="@ViewBag.CategoryId"
+                           asp-route-sortOrder="@ViewBag.SortOrder">
+                            Trước
+                        </a>
+                    </li>
+                }
+
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link"
+                           asp-controller="Products"
+                           asp-action="Index"
+                           asp-route-page="@i"
+                           asp-route-searchString="@ViewBag.SearchString"
+                           asp-route-categoryId="@ViewBag.CategoryId"
+                           asp-route-sortOrder="@ViewBag.SortOrder">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link"
+                           asp-controller="Products"
+                           asp-action="Index"
+                           asp-route-page="@(ViewBag.CurrentPage + 1)"
+                           asp-route-searchString="@ViewBag.SearchString"
+                           asp-route-categoryId="@ViewBag.CategoryId"
+                           asp-route-sortOrder="@ViewBag.SortOrder">
+                            Sau
+                        </a>
+                    </li>
+                }
+
+            </ul>
+        </nav>
+    }
+
+</div>
+
+@section Scripts {
+    <script>
+        const searchBox = document.getElementById("searchBox");
+        const suggestionBox = document.getElementById("suggestionBox");
+
+        searchBox.addEventListener("keyup", function () {
+            const term = this.value.trim();
+
+            if (term.length < 1) {
+                suggestionBox.style.display = "none";
+                suggestionBox.innerHTML = "";
+                return;
+            }
+
+            fetch(`/Products/Suggest?term=${encodeURIComponent(term)}`)
+                .then(response => response.json())
+                .then(data => {
+                    suggestionBox.innerHTML = "";
+
+                    if (data.length === 0) {
+                        suggestionBox.style.display = "none";
+                        return;
+                    }
+
+                    data.forEach(item => {
+                        const link = document.createElement("a");
+                        link.href = `/Products/Details/${item.id}`;
+                        link.className = "list-group-item list-group-item-action";
+
+                        link.innerHTML = `
+                            <div class="d-flex justify-content-between">
+                                <span>${item.name}</span>
+                                <strong class="text-danger">
+                                    ${Number(item.price).toLocaleString('vi-VN')} đ
+                                </strong>
+                            </div>
+                        `;
+
+                        suggestionBox.appendChild(link);
+                    });
+
+                    suggestionBox.style.display = "block";
+                });
+        });
+
+        document.addEventListener("click", function (e) {
+            if (!searchBox.contains(e.target) && !suggestionBox.contains(e.target)) {
+                suggestionBox.style.display = "none";
+            }
+        });
+    </script>
+}

@@ -1,0 +1,102 @@
+﻿@model List<DoAn.Models.CartItem>
+
+@{
+    decimal total = Model.Sum(x => x.Price * x.Quantity);
+}
+
+<div class="container mt-4">
+    <h2 class="text-primary mb-4">Thanh toán</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5>Thông tin đơn hàng</h5>
+
+            <table class="table">
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.ProductName x @item.Quantity</td>
+                        <td class="text-end">
+                            @String.Format("{0:N0} đ", item.Price * item.Quantity)
+                        </td>
+                    </tr>
+                }
+            </table>
+
+            <h4 class="text-end text-danger">
+                Tổng tiền: @String.Format("{0:N0} đ", total)
+            </h4>
+
+            <button type="button"
+                    class="btn btn-success btn-lg w-100 mt-3"
+                    data-bs-toggle="modal"
+                    data-bs-target="#checkoutModal">
+                Xác nhận thanh toán
+            </button>
+            <!-- Modal xác nhận thanh toán -->
+            <div class="modal fade"
+                 id="checkoutModal"
+                 tabindex="-1"
+                 aria-hidden="true">
+
+                <div class="modal-dialog modal-dialog-centered">
+
+                    <div class="modal-content">
+
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                Xác nhận thanh toán
+                            </h5>
+
+                            <button type="button"
+                                    class="btn-close btn-close-white"
+                                    data-bs-dismiss="modal">
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+
+                            <div class="text-center">
+
+                                <h2>🛒</h2>
+
+                                <p class="mb-3">
+                                    Bạn có chắc muốn thanh toán đơn hàng này?
+                                </p>
+
+                                <h4 class="text-danger">
+                                    @String.Format("{0:N0} đ", total)
+                                </h4>
+
+                            </div>
+
+                        </div>
+
+                        <div class="modal-footer">
+
+                            <button type="button"
+                                    class="btn btn-secondary"
+                                    data-bs-dismiss="modal">
+                                Hủy
+                            </button>
+
+                            <form asp-controller="Checkout"
+                                  asp-action="Confirm"
+                                  method="post">
+
+                                <button class="btn btn-success">
+                                    Thanh toán
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
