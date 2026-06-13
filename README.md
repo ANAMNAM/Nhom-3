@@ -1,5 +1,3 @@
-# ĐỒ ÁN TỐT NGHIỆP
-
 ## XÂY DỰNG HỆ THỐNG GỢI Ý SẢN PHẨM MUA KÈM BẰNG THUẬT TOÁN APRIORI
 
 ---
